@@ -7,6 +7,27 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const gname = (g) => (g === 11 ? "College" : "Grade " + g);
   const subjName = (id) => SUBJECTS.find((s) => s.id === id).n;
+  // Subject artwork: small line icons and animated scenes shown above quiz questions.
+  const ICON = {
+    math: `<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15 17h10M20 12v10M28 32l8 8M36 32l-8 8M13 35h12M33 15h6M33 20h6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`,
+    sci: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 6h10M21 6v13L9 39a3 3 0 0 0 3 4h24a3 3 0 0 0 3-4L27 19V6" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="M14 31h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="36" r="2" fill="currentColor"/><circle cx="27" cy="35" r="1.6" fill="currentColor"/></svg>`,
+    eng: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 12c-5-4-11-4-17-3v29c6-1 12-1 17 3 5-4 11-4 17-3V9c-6-1-12-1-17 3Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 12v29M12 17h7M12 23h7M29 17h7M29 23h7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+    gk: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="3"/><path d="M6 24h36M24 6c6 6 6 30 0 36M24 6c-6 6-6 30 0 36M9 14h30M9 34h30" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>`,
+  };
+  const subjIcon = (id, cls = "") => `<span class="sicon s-${id} ${cls}">${ICON[id] || ""}</span>`;
+  const FLOAT = { math: ["+", "−", "×", "÷", "π", "√", "∑", "x²", "%", "∞", "½", "="], sci: ["⚛", "🧪", "🔬", "⚡", "🌱", "🧲", "💧", "🔭"], eng: ["A", "b", "C", "“ ”", "?", "!", "Aa", "✎", "abc", "&"], gk: ["🌍", "🏛️", "🗺️", "🏆", "🚀", "🧭", "📜", "🇮🇳"] };
+  function quizScene(subj, mood, title = "") {
+    const f = FLOAT[subj] || FLOAT.math;
+    const floats = Array.from({ length: 12 }, (_, i) => `<span class="fl" style="--x:${(i * 83) % 100}%;--d:${6 + (i % 5)}s;--dl:-${(i * 1.7).toFixed(1)}s;--r:${(i % 2 ? 1 : -1) * (8 + i * 3)}deg">${f[i % f.length]}</span>`).join("");
+    const art = {
+      math: `<svg class="art spin" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="4 7"/><path d="M50 50 L90 50 A40 40 0 0 0 78 22 Z" fill="currentColor" opacity=".25"/><path d="M50 50 L90 50 M50 50 L78 22" stroke="currentColor" stroke-width="3"/></svg>`,
+      sci: `<svg class="art" viewBox="0 0 100 100" aria-hidden="true"><g class="spin"><ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="currentColor" stroke-width="2.5"/><ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="currentColor" stroke-width="2.5" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="42" ry="14" fill="none" stroke="currentColor" stroke-width="2.5" transform="rotate(120 50 50)"/></g><circle cx="50" cy="50" r="8" fill="currentColor"/></svg>`,
+      eng: `<svg class="art" viewBox="0 0 100 80" aria-hidden="true"><path d="M50 18c-10-8-24-8-38-6v52c14-2 28-2 38 6 10-8 24-8 38-6V12c-14-2-28-2-38 6Z" fill="none" stroke="currentColor" stroke-width="3"/><path class="page" d="M50 18c8-6 20-7 30-6v52c-10-1-22 0-30 6Z" fill="currentColor" opacity=".22"/></svg>`,
+      gk: `<svg class="art" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="glc"><circle cx="50" cy="50" r="38"/></clipPath></defs><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="3"/><g clip-path="url(#glc)"><g class="globe"><path d="M-30 12v76M-10 12v76M10 12v76M30 12v76M50 12v76M70 12v76M90 12v76M110 12v76M130 12v76" stroke="currentColor" stroke-width="2" opacity=".55"/></g><path d="M12 35h76M12 50h76M12 65h76" stroke="currentColor" stroke-width="2" opacity=".55"/></g><text class="plane" font-size="16" x="0" y="0">✈️</text></svg>`,
+    }[subj] || "";
+    const burst = mood === "ok" ? `<div class="burst">${Array.from({ length: 14 }, (_, i) => `<i style="--a:${i * 26}deg;--c:${["var(--marker)", "var(--sc)", "var(--ok)"][i % 3]}"></i>`).join("")}</div>` : "";
+    return `<div class="qscene s-${subj} ${mood || ""}"><div class="floats" aria-hidden="true">${floats}</div>${title ? `<div class="qs-title">${subjIcon(subj, "big")}<span>${title}</span></div>` : ""}<span aria-hidden="true">${art}</span>${burst}</div>`;
+  }
   const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
   // ---------- Storage (browser) ----------
@@ -17,9 +38,14 @@
     set(k, v) { mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { this.ok = false; } },
   };
   let accounts = store.get("ga.accounts") || {};
+  // Reward amounts the owner can tune from the admin dashboard.
+  const CFG_DEFAULT = { signup: 50, correct: 5, streakBonus: 2, perfect: 20, daily: 2, lesson: 3, gradeUp: 100 };
+  let CFG = { ...CFG_DEFAULT, ...(store.get("ga.config") || {}) };
+  const cleanCfg = (c) => Object.fromEntries(Object.keys(CFG_DEFAULT).map((k) => [k, Math.max(0, Math.min(k === "daily" ? 5 : 1000, Math.round(Number(c?.[k]) || 0)))]));
   let me = null;
   function save() {
     if (!me) return;
+    me.lastSeen = Date.now();
     accounts[me.key] = me;
     store.set("ga.accounts", accounts);
   }
@@ -110,7 +136,7 @@
     const p = gradeProgress(g);
     if (p.done < p.need) return null;
     me.maxGrade = GRADES[GRADES.indexOf(g) + 1];
-    me.coins += 100;
+    me.coins += CFG.gradeUp;
     return me.maxGrade;
   }
   function bumpStreak() {
@@ -135,17 +161,34 @@
     ["Collector", "Own 5 accessories", (p) => p.owned.length >= 5],
     ["Mistake Fixer", "Watch 5 fix-it lessons", (p) => (p.stats.lessons || 0) >= 5],
   ];
+  // Chapters renamed or merged when the app moved to the new NCERT books. Progress is copied
+  // to the new chapter (the old record is kept too), so nobody loses stars, coins or mistakes.
+  const MOVED = {
+    "m6-dec": "m7-dec", "m6-ratio": "m8-prop", "m7-pct": "m8-cq", "m7-area": "m8-area", "m8-lin": "m7-eq", "m8-cube": "m8-sq", "m9-ang": "m7-tri",
+    "s6-light": "s7-light", "s6-elec": "s7-curr", "s8-crop": "s8-harm", "s8-fric": "s8-force", "s8-sound": "s9-sound", "s9-grav": "s9-laws",
+    "e6-art": "e6-u1", "e6-noun": "e6-u2", "e6-syn": "e6-u3", "e6-ant": "e6-u4", "e7-tense": "e7-u1", "e7-adj": "e7-u2", "e7-spell": "e7-u3", "e7-prep": "e7-u4",
+    "e8-idiom": "e8-u1", "e8-voice": "e8-u2", "e8-homo": "e8-u3", "e8-sva": "e8-u4", "e9-bee": "e9-kav",
+  };
   // Older saved players predate some fields.
   function normalize(p) {
     p.mistakes = Array.isArray(p.mistakes) ? p.mistakes : [];
     p.stats.lessons = p.stats.lessons || 0;
+    p.skills = p.skills || {};
+    for (const [from, to] of Object.entries(MOVED)) {
+      const s = p.skills[from];
+      if (s && !p.skills[to]) p.skills[to] = { a: s.a, c: s.c, h: s.h.slice() };
+    }
+    p.mistakes.forEach((m) => { if (!SKILL[m.sid] && MOVED[m.sid]) m.sid = MOVED[m.sid]; });
+    p.days = p.days && typeof p.days === "object" ? p.days : {};
+    p.applied = Array.isArray(p.applied) ? p.applied : [];
+    p.lastSeen = p.lastSeen || p.created || Date.now();
     return p;
   }
 
   function newPlayer(name, pinHash, grade, look) {
     return {
       name, key: name.toLowerCase(), pinHash, startGrade: grade, maxGrade: grade, look,
-      coins: 50, xp: 0, owned: [], eq: {}, skills: {},
+      coins: CFG.signup, xp: 0, owned: [], eq: {}, skills: {}, days: {}, applied: [],
       games: { sprint: 0, m24: 0, scramble: 0, flash: 0 },
       stats: { answered: 0, correct: 0, quizzes: 0, perfect: 0 },
       streak: { days: 0, last: null }, daily: null, created: Date.now(), mistakes: [],
@@ -154,7 +197,7 @@
   function demoPlayer() {
     const p = newPlayer("Demo", "", 7, { skin: SKINS[2], shirt: SHIRTS[1] });
     p.demo = true; p.coins = 320; p.xp = 560; p.owned = ["hat-cap", "pet-dog", "bg-sky"]; p.eq = { hat: "hat-cap", pet: "pet-dog", bg: "bg-sky" };
-    const seed = { "m6-hcf": 9, "m6-int": 10, "m6-frac": 7, "m6-dec": 9, "m6-mens": 8, "s6-food": 9, "s6-sep": 8, "e6-art": 8, "e6-syn": 9, "g6-india": 10, "m7-int": 8, "m7-eq": 6, "s7-nutri": 9, "e7-tense": 5, "g7-sport": 7 };
+    const seed = { "m6-hcf": 9, "m6-int": 10, "m6-frac": 7, "m6-pat": 9, "m6-mens": 8, "m6-ang": 9, "s6-food": 9, "s6-sep": 8, "s6-mag": 9, "e6-u1": 8, "e6-u3": 9, "g6-india": 10, "m7-int": 8, "m7-eq": 6, "s7-nutri": 9, "e7-u1": 5, "g7-sport": 7 };
     for (const [id, c] of Object.entries(seed)) p.skills[id] = { a: 10, c, h: Array.from({ length: 10 }, (_, i) => (i < c ? 1 : 0)) };
     p.stats = { answered: 150, correct: 122, quizzes: 18, perfect: 3 };
     p.games = { sprint: 21, m24: 4, scramble: 6, flash: 14 };
@@ -162,7 +205,7 @@
     const ago = (h) => Date.now() - h * 3600e3;
     p.mistakes = [
       { id: "d1", sid: "m7-eq", q: "Solve for x: 4x + 7 = 31", a: "6", chosen: "9.5", t: ago(2) },
-      { id: "d2", sid: "e7-tense", q: "I ___ my homework already.", a: "have finished", chosen: "finished have", t: ago(5) },
+      { id: "d2", sid: "e7-u1", q: "I ___ my homework already.", a: "have finished", chosen: "finished have", t: ago(5) },
       { id: "d3", sid: "s7-acid", q: "Turmeric paper with a base turns…", a: "Red", chosen: "Yellow", t: ago(26) },
     ];
     return p;
@@ -180,7 +223,7 @@
   }
 
   // ---------- Shared leaderboard + cloud backup (claude.ai db capability) ----------
-  const remote = { db: null, uid: null, on: false, board: [], ro: false, chain: Promise.resolve(), sample: null };
+  const remote = { db: null, uid: null, on: false, board: [], ro: false, chain: Promise.resolve(), sample: null, owner: false, grants: {} };
   async function initRemote() {
     if (window.claude && typeof window.claude.use === "function") {
       window.claude.use("sample").then((s) => { remote.sample = s; if (view === "lesson") render(); }).catch(() => {});
@@ -188,10 +231,16 @@
     try {
       if (!window.claude || typeof window.claude.use !== "function") return;
       const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      try { remote.owner = user ? !!(await user.isOwner()) : false; } catch (e) { remote.owner = false; }
+      if (remote.owner && view === "login") render();
       if (!db) return;
       remote.db = db;
       try { remote.uid = user ? await user.id() : null; } catch (e) { remote.uid = null; }
       remote.on = true;
+      // Owner-set reward amounts apply to everyone who opens the shared link.
+      db.doc("config/rewards").onSnapshot((d) => { if (d.exists) { CFG = { ...CFG_DEFAULT, ...cleanCfg(d.data()) }; if (view !== "quiz" && view !== "lesson") render(); } }, () => {});
+      // Coins the owner gives to players arrive here and are added once.
+      if (remote.uid) db.doc("grants/" + remote.uid).onSnapshot((d) => { remote.grants = (d.exists && d.data().items) || {}; applyGrants(); }, () => {});
       db.collection("leaderboard").limit(500).onSnapshot((snap) => {
         const rows = [];
         snap.docs.forEach((d) => {
@@ -202,7 +251,7 @@
           }
         });
         remote.board = rows;
-        if (view === "board") render();
+        if (view === "board" || (view === "admin" && !admin.edit)) render();
       }, () => { remote.on = false; if (view === "board") render(); });
       if (me) pushRemote();
       if (view === "board") render();
@@ -211,7 +260,7 @@
   function pushRemote() {
     if (!remote.db || !remote.uid || !me || me.demo || remote.ro) return;
     const db = remote.db, uid = remote.uid, p = me;
-    const entry = { name: p.name, xp: p.xp, coins: p.coins, grade: p.maxGrade, look: p.look, eq: p.eq, updated: Date.now() };
+    const entry = { name: p.name, xp: p.xp, coins: p.coins, grade: p.maxGrade, look: p.look, eq: p.eq, updated: Date.now(), ...summary(p) };
     const snapshot = JSON.parse(JSON.stringify(p));
     remote.chain = remote.chain.then(async () => {
       const ref = db.doc("leaderboard/" + uid);
@@ -222,6 +271,24 @@
       }
       try { await db.collection("data/users/" + uid).doc(p.key).set(snapshot); } catch (e) { /* backup is best-effort */ }
     }).catch(() => {});
+  }
+  // Non-identifying totals the owner's dashboard uses for onboarding and activity charts.
+  function summary(p) {
+    const days = {}; Object.keys(p.days || {}).sort().slice(-21).forEach((d) => (days[d] = p.days[d]));
+    return { created: p.created || null, startGrade: p.startGrade, answered: p.stats.answered, correct: p.stats.correct, quizzes: p.stats.quizzes,
+      lessons: p.stats.lessons || 0, mastered: mastered(p), owned: p.owned.length, streak: p.streak.days, seen: p.lastSeen || Date.now(), days };
+  }
+  function applyGrants() {
+    if (!me || me.demo) return;
+    let got = 0;
+    for (const [gid, g] of Object.entries(remote.grants)) {
+      if (!g || g.key !== me.key || me.applied.includes(gid)) continue;
+      const c = Math.max(-100000, Math.min(100000, Math.round(Number(g.coins) || 0)));
+      me.coins = Math.max(0, me.coins + c); me.applied.push(gid); got += c;
+    }
+    if (!got) return;
+    save(); pushRemote(); toast(got > 0 ? `The owner sent you ${got} coins!` : `The owner adjusted your coins by ${got}.`);
+    if (view !== "quiz" && view !== "lesson") render();
   }
   async function fetchRemotePlayer(key) {
     if (!remote.db || !remote.uid) return null;
@@ -241,7 +308,7 @@
   const navOf = (v) => (v === "quiz" || v === "lesson" ? "learn" : v === "mistakes" ? "progress" : v.startsWith("game-") ? "games" : v);
 
   function render() {
-    if (!me) view = "login";
+    if (!me && view !== "admin") view = "login";
     const top = $("#top"), tab = $("#tabbar");
     top.hidden = tab.hidden = !me;
     if (me) {
@@ -251,7 +318,7 @@
       $("#topRight").innerHTML = `<span class="coins" title="Coins"><i class="coin"></i><span class="num">${me.coins}</span></span>
         <button class="me-btn" data-act="go" data-v="progress" aria-label="Your profile">${avatar(me, 40)}</button>`;
     }
-    const V = { login: vLogin, home: vHome, learn: vLearn, quiz: vQuiz, games: vGames, shop: vShop, board: vBoard, progress: vProgress, lesson: vLesson, mistakes: vMistakes, "game-sprint": vSprint, "game-m24": v24, "game-scramble": vScramble, "game-flash": vFlash };
+    const V = { login: vLogin, home: vHome, learn: vLearn, quiz: vQuiz, games: vGames, shop: vShop, board: vBoard, progress: vProgress, lesson: vLesson, mistakes: vMistakes, admin: vAdmin, "game-sprint": vSprint, "game-m24": v24, "game-scramble": vScramble, "game-flash": vFlash };
     $("#app").innerHTML = (V[view] || vHome)();
   }
 
@@ -293,9 +360,9 @@
       <div class="stack" style="gap:18px;padding-top:12px">
         <div class="hero-art">${samples.map((s, i) => `<div style="transform:rotate(${[-6, 3, -2][i]}deg)">${avatar(s, [72, 96, 80][i])}</div>`).join("")}</div>
         <h1>Learn, play and <span class="hl">climb the grades</span>.</h1>
-        <p class="muted" style="max-width:52ch">Quizzes in Maths, Science, English and General Knowledge for Grade 6 to 10 and College, built around CBSE chapters. Earn coins, dress up your avatar, master skills to unlock the next grade, and race your friends on the leaderboard.</p>
+        <p class="muted" style="max-width:52ch">Quizzes in Maths, Science, English and General Knowledge for Grade 6 to 10 and College, following the latest NCERT textbooks. Earn coins, dress up your avatar, master skills to unlock the next grade, and race your friends on the leaderboard.</p>
         <div class="row small muted"><span class="row" style="gap:6px"><i class="subj s-math"></i>${SKILLS.filter((s) => s.s === "math").length} maths chapters</span><span class="row" style="gap:6px"><i class="subj s-sci"></i>${SKILLS.filter((s) => s.s === "sci").length} science</span><span class="row" style="gap:6px"><i class="subj s-eng"></i>${SKILLS.filter((s) => s.s === "eng").length} English</span><span class="row" style="gap:6px"><i class="subj s-gk"></i>${SKILLS.filter((s) => s.s === "gk").length} GK</span><span>4 games</span></div>
-        <div><button class="btn" data-act="demo">Look around as the demo player</button></div>
+        <div class="row"><button class="btn" data-act="demo">Look around as the demo player</button><button class="btn btn-ghost" data-act="admin">${remote.owner ? "Owner dashboard" : "Owner / admin"}</button></div>
         ${store.ok ? "" : `<p class="notice">This browser is blocking storage, so progress will be lost when you close the page.</p>`}
       </div>
       <div class="card stack" style="gap:16px">
@@ -313,8 +380,8 @@
     me = newPlayer(name, await hashPin(key, pin), ui.su.grade, { skin: ui.su.skin, shirt: ui.su.shirt });
     if (ui.su.photo) me.photo = ui.su.photo;
     ui.subject = "math"; ui.grade = me.maxGrade;
-    save(); store.set("ga.session", key); pushRemote();
-    toast(`Welcome, ${name}! Here are 50 coins to start.`);
+    save(); store.set("ga.session", key); pushRemote(); applyGrants();
+    toast(`Welcome, ${name}! Here are ${CFG.signup} coins to start.`);
     go("home");
   }
   async function doSignin() {
@@ -327,7 +394,7 @@
     if (!p) return (err.textContent = "No player with that name here. Check the spelling or create a new player.");
     if (p.pinHash !== h) return (err.textContent = "That PIN doesn't match. Try again.");
     me = normalize(p); ui.grade = me.maxGrade;
-    save(); store.set("ga.session", key);
+    save(); store.set("ga.session", key); applyGrants();
     go("home");
   }
 
@@ -342,11 +409,11 @@
     }
     return out;
   }
-  function skillCard(k, locked) {
+  function skillCard(k, locked, inBook) {
     const s = me.skills[k.id], st = stars(k.id), acc = recentAcc(k.id);
     return `<div class="card skill-card s-${k.s}">
-      <div class="row" style="justify-content:space-between"><span class="label">${subjName(k.s)} · ${gname(k.g)}</span>${starHtml(st)}</div>
-      <h3>${esc(k.n)}</h3>
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:8px;flex-wrap:nowrap">${subjIcon(k.s)}<span class="label">${k.ch ? esc(k.ch) : subjName(k.s)} · ${gname(k.g)}</span></span>${starHtml(st)}</div>
+      <h3>${esc(k.n)}</h3>${k.book && !inBook ? `<span class="small muted book-name">${esc(k.book)}</span>` : ""}
       <div class="bar"><i style="width:${acc == null ? 0 : Math.round(acc * 100)}%"></i></div>
       <div class="row" style="justify-content:space-between">
         <span class="small muted">${s ? `${Math.round(acc * 100)}% recent · ${s.a} answered` : "Not started"}</span>
@@ -374,17 +441,23 @@
           </div>
         </div>
         <div class="stack" style="gap:8px">
-          <button class="btn btn-marker btn-lg" data-act="daily" ${dailyDone ? "disabled" : ""}>${dailyDone ? "Daily challenge done" : "Daily challenge · 2× coins"}</button>
+          <button class="btn btn-marker btn-lg" data-act="daily" ${dailyDone ? "disabled" : ""}>${dailyDone ? "Daily challenge done" : `Daily challenge · ${Math.max(1, CFG.daily)}× coins`}</button>
           <button class="btn" data-act="go" data-v="learn">Browse all chapters</button>
         </div>
       </section>
       ${mistakesCard(3)}
       <section class="card stack">
         <div class="row" style="justify-content:space-between"><h3>${gname(me.maxGrade)} progress</h3>
-          <span class="small muted">${me.maxGrade === 11 ? "Top level reached. Keep collecting stars!" : `Get ${gp.need} of ${gp.total} skills to 2★ to unlock ${gname(GRADES[GRADES.indexOf(me.maxGrade) + 1])} (+100 coins)`}</span></div>
+          <span class="small muted">${me.maxGrade === 11 ? "Top level reached. Keep collecting stars!" : `Get ${gp.need} of ${gp.total} skills to 2★ to unlock ${gname(GRADES[GRADES.indexOf(me.maxGrade) + 1])} (+${CFG.gradeUp} coins)`}</span></div>
         <div class="bar"><i style="width:${Math.min(100, Math.round((gp.done / gp.need) * 100))}%"></i></div>
         <span class="small"><b class="num">${gp.done}</b> of ${gp.need} done</span>
       </section>
+      <section class="subj-tiles">${SUBJECTS.map((sj) => {
+        const list = SKILLS.filter((k) => k.s === sj.id && k.g === me.maxGrade), done = list.filter((k) => stars(k.id) >= 2).length, pc = list.length ? Math.round((done / list.length) * 100) : 0;
+        const bk = [...new Set(list.map((k) => k.book).filter(Boolean))][0];
+        return `<button class="subj-tile s-${sj.id}" data-act="subjGo" data-id="${sj.id}">${subjIcon(sj.id, "big")}<span class="st-text"><b>${sj.n}</b><span class="small">${bk ? esc(bk) : gname(me.maxGrade)}</span></span>
+          <span class="ring" style="--p:${pc}"><span class="num">${pc}%</span></span></button>`;
+      }).join("")}</section>
       <section class="stack">
         <h3>Practise next</h3>
         <div class="grid3">${suggestions().map((k) => skillCard(k, false)).join("")}</div>
@@ -407,12 +480,14 @@
     return `
       <section class="stack">
         <h2>Learn</h2>
-        <div class="row" style="gap:8px">${SUBJECTS.map((s) => `<button class="chip s-${s.id}" data-act="subj" data-id="${s.id}" aria-pressed="${ui.subject === s.id}"><i class="subj"></i>${s.n}</button>`).join("")}</div>
+        <div class="subj-tabs">${SUBJECTS.map((s) => `<button class="subj-tab s-${s.id}" data-act="subj" data-id="${s.id}" aria-pressed="${ui.subject === s.id}">${subjIcon(s.id)}<span>${s.n}</span></button>`).join("")}</div>
         <div class="row" style="gap:6px">${GRADES.map((x) => `<button class="chip" data-act="grade" data-g="${x}" aria-pressed="${g === x}">${gname(x)}${x > me.maxGrade ? " · locked" : ""}</button>`).join("")}</div>
       </section>
       ${locked ? `<p class="notice">${gname(g)} unlocks when you get half the ${gname(me.maxGrade)} skills to 2★. You can preview the chapters below.</p>` : ""}
-      <div class="grid3">${list.map((k) => skillCard(k, locked)).join("")}</div>
-      <p class="small muted">Chapter names follow the NCERT textbooks used in CBSE schools. Stars show mastery from your last 10 answers in each chapter: 1★ at 50%, 2★ at 75%, 3★ at 90% with 10+ answers.</p>`;
+      ${[...new Set(list.map((k) => k.book || ""))].map((b) => `<section class="stack book-sec s-${ui.subject}">
+        ${b ? `<div class="book-head">${subjIcon(ui.subject, "big")}<div><span class="label">NCERT textbook · ${gname(g)}</span><h3>${esc(b)}</h3></div><span class="small muted" style="margin-left:auto">${list.filter((k) => k.book === b).length} ${list[0]?.ch?.startsWith("Unit") ? "units" : "chapters"}</span></div>` : ""}
+        <div class="grid3">${list.filter((k) => (k.book || "") === b).map((k) => skillCard(k, locked, true)).join("")}</div></section>`).join("")}
+      <p class="small muted">Chapters follow the current NCERT textbooks: Ganita Prakash, Curiosity and Poorvi for Classes 6 to 8, Ganita Manjari, Exploration and Kaveri for Class 9, and the rationalised Class 10 books. General knowledge and College sets are extra practice. Stars show mastery from your last 10 answers in each chapter: 1★ at 50%, 2★ at 75%, 3★ at 90% with 10+ answers.</p>`;
   }
 
   // ---------- Quiz ----------
@@ -426,7 +501,7 @@
     let pool = SKILLS.filter((k) => k.g === me.maxGrade);
     if (pool.length < 10) pool = pool.concat(SKILLS.filter((k) => k.g < me.maxGrade));
     const picks = R.shuffle(pool).slice(0, 10);
-    quiz = { kind: "daily", title: "Daily challenge", subj: null, qs: picks.map((k) => C.buildQuiz(k, 1)[0]), i: 0, results: [], streak: 0, best: 0, coins: 0, xp: 0, mult: 2, answered: null };
+    quiz = { kind: "daily", title: "Daily challenge", subj: null, qs: picks.map((k) => C.buildQuiz(k, 1)[0]), i: 0, results: [], streak: 0, best: 0, coins: 0, xp: 0, mult: Math.max(1, CFG.daily), answered: null };
     go("quiz");
   }
   function answer(idx) {
@@ -436,6 +511,8 @@
     quiz.answered = idx; quiz.results.push(ok);
     const s = sk(q.sid); s.a++; if (ok) s.c++; s.h.push(ok ? 1 : 0); if (s.h.length > 10) s.h.shift();
     me.stats.answered++;
+    const today = dayStr(); me.days[today] = (me.days[today] || 0) + 1;
+    const keep = Object.keys(me.days).sort().slice(-60); if (keep.length < Object.keys(me.days).length) me.days = Object.fromEntries(keep.map((d) => [d, me.days[d]]));
     if (!ok) {
       const m = { id: Date.now().toString(36) + R.int(100, 999), sid: q.sid, q: q.q, a: q.a, chosen: q.opts[idx], t: Date.now() };
       me.mistakes.unshift(m); if (me.mistakes.length > 60) me.mistakes.pop();
@@ -443,7 +520,7 @@
     }
     if (ok) {
       me.stats.correct++; quiz.streak++; quiz.best = Math.max(quiz.best, quiz.streak);
-      const c = (5 + (quiz.streak >= 3 ? 2 : 0)) * quiz.mult, x = 10 * quiz.mult;
+      const c = (CFG.correct + (quiz.streak >= 3 ? CFG.streakBonus : 0)) * quiz.mult, x = 10 * quiz.mult;
       quiz.coins += c; quiz.xp += x; me.coins += c; me.xp += x; quiz.gain = c;
     } else { quiz.streak = 0; quiz.gain = 0; }
     save(); render();
@@ -454,7 +531,7 @@
     if (quiz.i < quiz.qs.length) return render();
     quiz.done = true;
     me.stats.quizzes++;
-    if (quiz.results.every(Boolean)) { me.stats.perfect++; const b = 20 * quiz.mult; quiz.bonus = b; me.coins += b; quiz.coins += b; }
+    if (quiz.results.every(Boolean)) { me.stats.perfect++; const b = CFG.perfect * quiz.mult; quiz.bonus = b; me.coins += b; quiz.coins += b; }
     if (quiz.kind === "daily") me.daily = dayStr();
     bumpStreak();
     quiz.gradeUp = checkGradeUp();
@@ -476,8 +553,8 @@
             <span class="stat small muted"><b class="num" style="color:var(--ink)">${quiz.best}</b>best streak</span>
           </div>
           ${st != null ? `<div class="row" style="justify-content:center">${starHtml(st)}<span class="small muted">${st > quiz.starsBefore ? "New star earned!" : "Chapter mastery"}</span></div>` : ""}
-          ${quiz.gradeUp ? `<p class="notice" style="color:var(--ink)"><b>${gname(quiz.gradeUp)} unlocked!</b> You earned 100 bonus coins.</p>` : ""}
-          ${(quiz.mistakes || []).length ? `<div class="stack" style="width:100%;text-align:left;gap:8px"><span class="label">Fix your mistakes · +3 coins per lesson watched</span>${mistakeRows(me.mistakes.filter((m) => quiz.mistakes.includes(m.id)))}</div>` : ""}
+          ${quiz.gradeUp ? `<p class="notice" style="color:var(--ink)"><b>${gname(quiz.gradeUp)} unlocked!</b> You earned ${CFG.gradeUp} bonus coins.</p>` : ""}
+          ${(quiz.mistakes || []).length ? `<div class="stack" style="width:100%;text-align:left;gap:8px"><span class="label">Fix your mistakes · +${CFG.lesson} coins per lesson watched</span>${mistakeRows(me.mistakes.filter((m) => quiz.mistakes.includes(m.id)))}</div>` : ""}
           <div class="row" style="justify-content:center">
             ${quiz.sid ? `<button class="btn btn-primary" data-act="practise" data-sid="${quiz.sid}">Play again</button>` : ""}
             <button class="btn" data-act="go" data-v="learn">Back to chapters</button>
@@ -490,11 +567,12 @@
     const ans = quiz.answered;
     return `<section class="quiz">
       <div class="row" style="justify-content:space-between">
-        <span class="row" style="gap:8px"><i class="subj s-${k.s}"></i><span class="label">${esc(quiz.kind === "daily" ? "Daily challenge · " + k.n : k.n)}</span></span>
+        <span class="small muted">${esc(k.book || subjName(k.s))}</span>
         <span class="row" style="gap:12px">${quiz.streak >= 2 ? `<span class="combo">${quiz.streak} in a row</span>` : ""}<span class="small muted num">Q ${quiz.i + 1} of ${quiz.qs.length}</span><button class="btn btn-ghost" data-act="go" data-v="learn">Quit</button></span>
       </div>
+      ${quizScene(k.s, ans == null ? "" : q.opts[ans] === q.a ? "ok" : "bad", `<span class="label">${quiz.kind === "daily" ? "Daily challenge · " : ""}${k.ch ? esc(k.ch) + " · " : ""}${subjName(k.s)} · ${gname(k.g)}</span><b>${esc(k.n)}</b>`)}
       <div class="dots">${quiz.qs.map((_, i) => `<i class="${i < quiz.results.length ? (quiz.results[i] ? "ok" : "bad") : i === quiz.i ? "cur" : ""}"></i>`).join("")}</div>
-      <div class="card stack" style="gap:20px;padding:22px">
+      <div class="card stack qcard s-${k.s} ${ans == null ? "enter" : q.opts[ans] === q.a ? "" : "shake"}" style="gap:20px;padding:22px" data-q="${quiz.i}">
         <p class="qtext">${esc(q.q)}</p>
         <div class="opts">${q.opts.map((o, i) => {
           let cls = "";
@@ -528,7 +606,7 @@
     if (!open.length) return "";
     return `<section class="card stack">
       <div class="row" style="justify-content:space-between"><h3>Fix your mistakes <span class="muted small">${open.length} to review</span></h3><button class="btn btn-ghost" data-act="go" data-v="mistakes">See all</button></div>
-      <p class="small muted">Each 1-minute lesson explains the idea behind a question you missed. Finish one to earn 3 coins.</p>
+      <p class="small muted">Each 1-minute lesson explains the idea behind a question you missed. Finish one to earn ${CFG.lesson} coins.</p>
       ${mistakeRows(open.slice(0, n))}</section>`;
   }
   function vMistakes() {
@@ -539,19 +617,71 @@
 
   const canSpeak = () => "speechSynthesis" in window;
   const hush = () => { try { if (canSpeak()) speechSynthesis.cancel(); } catch (e) { /* ignore */ } };
+  // Narration: pick the most natural voice the device has (neural/online voices first, Indian English
+  // preferred), read maths symbols as words, and speak sentence by sentence so pauses fall naturally.
+  let voices = [];
+  function voiceScore(v) {
+    const n = v.name;
+    let sc = 0;
+    if (/natural|neural/i.test(n)) sc += 60;
+    if (/premium|enhanced/i.test(n)) sc += 45;
+    if (/online/i.test(n)) sc += 25;
+    if (/google/i.test(n)) sc += 22;
+    if (/en[-_]IN/i.test(v.lang)) sc += 20; else if (/en[-_](GB|US|AU)/i.test(v.lang)) sc += 6;
+    if (/compact|espeak|robot|novelty|whisper|bells|organ|zarvox|trinoids|albert|bad news|good news|bubbles|cellos|jester|superstar|wobble/i.test(n)) sc -= 80;
+    return sc;
+  }
+  function loadVoices() {
+    if (!canSpeak()) return;
+    try { voices = speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a)); } catch (e) { voices = []; }
+    if (view === "lesson" && lesson && !document.querySelector(".controls select:focus")) {
+      const sel = $("#voiceSel"); if (sel) sel.outerHTML = voicePicker();
+    }
+  }
+  if (canSpeak()) { loadVoices(); try { speechSynthesis.addEventListener("voiceschanged", loadVoices); } catch (e) { speechSynthesis.onvoiceschanged = loadVoices; } }
+  const pickedVoice = () => { const want = store.get("ga.voice"); return voices.find((v) => v.voiceURI === want) || voices[0] || null; };
+  function voicePicker() {
+    if (!voices.length) return `<span id="voiceSel"></span>`;
+    const cur = pickedVoice();
+    return `<select id="voiceSel" class="vsel" aria-label="Narrator voice">${voices.slice(0, 24).map((v, i) => `<option value="${esc(v.voiceURI)}" ${cur && v.voiceURI === cur.voiceURI ? "selected" : ""}>${esc(v.name.replace(/^Microsoft |^Google /, "").replace(/ - English.*| \(.*?English.*?\)/, ""))}${i === 0 ? " ★" : ""}</option>`).join("")}</select>`;
+  }
+  const SUPW = { "²": " squared", "³": " cubed" };
+  const FRACW = { "1/2": "one half", "1/3": "one third", "2/3": "two thirds", "1/4": "one quarter", "3/4": "three quarters", "1/5": "one fifth", "1/6": "one sixth", "1/8": "one eighth", "1/10": "one tenth" };
+  function speakable(t) {
+    return String(t)
+      .replace(/₹\s?([\d,.]+)/g, "$1 rupees")
+      .replace(/(\d)\s?cm²/g, "$1 square centimetres").replace(/(\d)\s?cm³/g, "$1 cubic centimetres").replace(/\bcm²/g, "square centimetres").replace(/\bcm³/g, "cubic centimetres")
+      .replace(/km\/h/g, "kilometres per hour").replace(/m\/s²/g, "metres per second squared").replace(/m\/s/g, "metres per second")
+      .replace(/(\d)\s?cm\b/g, "$1 centimetres").replace(/(\d)\s?km\b/g, "$1 kilometres").replace(/(\d)\s?kg\b/g, "$1 kilograms").replace(/(\d)\s?°C/g, "$1 degrees Celsius")
+      .replace(/(\d)\s?°/g, "$1 degrees").replace(/(\d)\s?%/g, "$1 percent")
+      .replace(/√\s?(\w+)/g, "the square root of $1").replace(/∛\s?(\w+)/g, "the cube root of $1")
+      .replace(/([A-Za-z0-9)])([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g, (m, a, b) => a + (SUPW[b] || " to the power " + [...b].map((c) => (c === "⁻" ? "minus " : "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c))).join("")))
+      .replace(/\b(\d+)\/(\d+)\b/g, (m, a, b) => FRACW[m] || `${a} over ${b}`)
+      .replace(/\s×\s|×/g, " times ").replace(/\s÷\s|÷/g, " divided by ").replace(/\s=\s/g, " equals ").replace(/\s\+\s/g, " plus ")
+      .replace(/(^|[\s(])[−-](\d)/g, "$1minus $2").replace(/\s[−-]\s/g, " minus ").replace(/π/g, "pi").replace(/≅/g, " is congruent to ").replace(/∥/g, " is parallel to ")
+      .replace(/_{2,}|…(?=\s*$)|…/g, (m) => (m.startsWith("_") ? " blank " : "..."))
+      .replace(/\s{2,}/g, " ").trim();
+  }
   function speak(text) {
     hush();
     if (!canSpeak() || !lesson.voice) return;
     try {
-      const u = new SpeechSynthesisUtterance(text), vs = speechSynthesis.getVoices();
-      const v = vs.find((x) => /en[-_]IN/i.test(x.lang)) || vs.find((x) => /^en/i.test(x.lang));
-      if (v) u.voice = v;
-      u.rate = 0.97;
-      speechSynthesis.speak(u);
+      if (!voices.length) loadVoices();
+      const v = pickedVoice();
+      const parts = speakable(text).replace(/([.!?:])\s+/g, "$1\n").split("\n");
+      for (const part of parts) {
+        const line = part.trim(); if (!line) continue;
+        const u = new SpeechSynthesisUtterance(line);
+        if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-IN";
+        // Neural voices already sound natural at normal speed; plain device voices get slowed a touch.
+        u.rate = v && voiceScore(v) >= 40 ? 1 : 0.92;
+        u.pitch = 1.02;
+        speechSynthesis.speak(u);
+      }
     } catch (e) { /* narration is optional */ }
   }
   const sceneDur = (s) => Math.max(4500, (s.text.length + (s.title || "").length) * 55);
-  const sceneSpeech = (s) => (s.kind === "intro" || s.kind === "mistake" || s.kind === "outro" ? `${s.title}. ${s.text}` : s.kind === "ai" ? s.steps.join(" ") : `${s.tag}. ${s.text}`);
+  const sceneSpeech = (s) => (s.kind === "intro" ? `${s.title}. ${s.text}` : s.kind === "mistake" ? `The question was: ${s.title} ${s.text}` : s.kind === "outro" ? `${s.title}! ${s.text}` : s.kind === "ai" ? s.steps.join(" ") : { "Key idea": "Here's the key idea.", "Worked example": "Let's work through an example.", "Watch out": "One thing to watch out for." }[s.tag] + " " + s.text);
   function openLesson(sid, mid) {
     const k = SKILL[sid], L = LESSONS[sid];
     if (!k || !L) return toast("No lesson for this chapter yet.");
@@ -586,7 +716,7 @@
     if (lesson.done) return;
     lesson.done = true;
     me.stats.lessons = (me.stats.lessons || 0) + 1;
-    if (lesson.m && !lesson.m.watched) { lesson.m.watched = true; me.coins += 3; me.xp += 5; lesson.reward = true; }
+    if (lesson.m && !lesson.m.watched) { lesson.m.watched = true; me.coins += CFG.lesson; me.xp += 5; lesson.reward = CFG.lesson; }
     save(); pushRemote();
     const c = $(".coins .num"); if (c) c.textContent = me.coins;
   }
@@ -617,7 +747,7 @@
     if (s.kind === "mistake") body = `<p class="sc-q">${esc(s.title)}</p><div class="sc-ans"><span class="sc-was">${esc(s.m.chosen)}</span><span aria-hidden="true">→</span><span class="sc-right">${esc(s.m.a)}</span></div>`;
     else if (s.kind === "ai") body = `<ol class="sc-steps">${s.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>`;
     else if (s.kind === "intro") body = `<p class="sc-title">${esc(s.title)}</p><p class="sc-text">${esc(s.text)}</p>`;
-    else if (s.kind === "outro") body = `<p class="sc-title">${esc(s.title)}</p><p class="sc-text">${esc(s.text)}</p>${lesson.reward ? `<p class="sc-reward">+3 coins for fixing a mistake</p>` : ""}<div class="row" style="justify-content:center"><button class="btn btn-marker" data-act="practise" data-sid="${k.id}">Practise ${esc(k.n)}</button><button class="btn" data-act="lSeek" data-i="0">Replay</button></div>`;
+    else if (s.kind === "outro") body = `<p class="sc-title">${esc(s.title)}</p><p class="sc-text">${esc(s.text)}</p>${lesson.reward ? `<p class="sc-reward">+${lesson.reward} coins for fixing a mistake</p>` : ""}<div class="row" style="justify-content:center"><button class="btn btn-marker" data-act="practise" data-sid="${k.id}">Practise ${esc(k.n)}</button><button class="btn" data-act="lSeek" data-i="0">Replay</button></div>`;
     else body = `<p class="sc-text big">${esc(s.text)}</p>`;
     const backLabel = { quiz: "Back to quiz", mistakes: "Back to mistakes", learn: "Back to chapters", home: "Back home", progress: "Back to progress" }[lesson.from] || "Back";
     const ai = !lesson.m || !remote.sample ? ""
@@ -639,7 +769,7 @@
           <button class="cb" data-act="lSeek" data-i="${lesson.i + 1}" aria-label="Next scene" ${lesson.i < lesson.scenes.length - 1 ? "" : "disabled"}>⏭</button>
           <div class="segs">${lesson.scenes.map((x, j) => `<button class="seg-b" data-act="lSeek" data-i="${j}" aria-label="Scene ${j + 1}: ${esc(x.tag)}"><span class="seg-track"><i class="seg-fill ${j === lesson.i ? "cur" : ""}" style="width:${j < lesson.i ? 100 : j === lesson.i ? (lesson.el / dur) * 100 : 0}%"></i></span></button>`).join("")}</div>
           <span class="ltime">${lesson.i + 1} / ${lesson.scenes.length}</span>
-          ${canSpeak() ? `<button class="cb" data-act="lVoice" aria-pressed="${lesson.voice}">${lesson.voice ? "Voice on" : "Voice off"}</button>` : ""}
+          ${canSpeak() ? `<button class="cb" data-act="lVoice" aria-pressed="${lesson.voice}">${lesson.voice ? "Voice on" : "Voice off"}</button>${lesson.voice ? voicePicker() : ""}` : ""}
         </div>
       </div>
       <div class="row">
@@ -647,7 +777,7 @@
         <a class="btn" href="${ytLink(k)}" target="_blank" rel="noopener noreferrer">More videos on YouTube ↗</a>
         <button class="btn btn-primary" data-act="practise" data-sid="${k.id}">Practise this chapter</button>
       </div>
-      <p class="small muted">Space pauses, and the arrow keys move between scenes. YouTube opens in a new tab with videos for this chapter.</p>
+      <p class="small muted">Space pauses, and the arrow keys move between scenes. The ★ voice is the most natural one on your device; Microsoft Edge and Chrome offer the most lifelike voices. YouTube opens in a new tab with videos for this chapter.</p>
     </section>`;
   }
 
@@ -925,7 +1055,7 @@
     } else if (!remote.on) {
       body = `<p class="notice">The shared leaderboard works when Gyaan Arena is opened from its claude.ai link while signed in. On this view only the device leaderboard is available.</p>`;
     } else {
-      const rows = remote.board.map((p) => ({ ...p, isMe: p.owner === remote.uid && p.key === me.key })).sort((a, b) => b.xp - a.xp).slice(0, 100);
+      const rows = remote.board.filter((p) => !p.hidden).map((p) => ({ ...p, isMe: p.owner === remote.uid && p.key === me.key })).sort((a, b) => b.xp - a.xp).slice(0, 100);
       body = boardRows(rows) + `<p class="small muted">${me.demo ? "The demo player isn't posted to the shared board. Create your own player to join." : remote.ro ? "You can see the board, but this link doesn't let you post scores. Ask the owner for Contributor access." : "Your score updates after each quiz and game."}</p>`;
     }
     return `<section class="stack"><h2>Leaderboard</h2>
@@ -949,7 +1079,7 @@
         <td>${g <= me.maxGrade ? `<button class="btn" data-act="practise" data-sid="${k.id}">Practise</button>` : ""}</td></tr>`;
     }).join("")).join("");
     return `<section class="row" style="justify-content:space-between"><div class="row">${avatar(me, 64)}<div><h2>${esc(me.name)}</h2><span class="muted small">${me.demo ? "Demo player · progress is just for trying things out" : "Started in " + gname(me.startGrade)}</span></div></div>
-        <div class="row">${photoControls()}<button class="btn" data-act="logout">Switch player</button></div></section>
+        <div class="row">${photoControls()}<button class="btn" data-act="logout">Switch player</button><button class="btn btn-ghost" data-act="admin">Owner dashboard</button></div></section>
       ${mistakesCard(5)}
       <section class="card statline">
         <span class="stat small muted"><b class="num" style="color:var(--ink)">${me.stats.answered}</b>questions answered</span>
@@ -962,6 +1092,178 @@
       <section class="card stack"><h3>${gname(g)} skills</h3>
         <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Chapter</th><th>Mastery</th><th class="num">Recent</th><th class="num">Answered</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></section>
       <section class="card stack"><h3>Badges</h3><div class="badges">${BADGES.map(([n, d, f]) => `<div class="badge ${f(me) ? "" : "locked"}"><b>${n}</b><span class="small muted">${d}</span></div>`).join("")}</div></section>`;
+  }
+
+
+  // ---------- Owner / admin dashboard ----------
+  // On the claude.ai link the artifact owner is the admin. Anywhere else (GitHub Pages), a passcode
+  // set on first use guards the dashboard, which can then only see players stored in this browser.
+  const admin = { open: false, tab: "overview", q: "", edit: null, confirm: null, from: "login", err: "" };
+  const DAY = 86400e3;
+  const ago = (t) => { if (!t) return "–"; const d = Math.floor((Date.now() - t) / DAY); return d <= 0 ? "Today" : d === 1 ? "Yesterday" : d < 30 ? `${d} days ago` : new Date(t).toLocaleDateString(); };
+  function openAdmin() { admin.from = view === "admin" ? admin.from : view; admin.open = !!remote.owner || admin.open; admin.err = ""; go("admin"); }
+  async function adminUnlock() {
+    const pass = ($("#adPass")?.value || "").trim(), saved = store.get("ga.admin");
+    if (pass.length < 6) { admin.err = "Use at least 6 characters."; return render(); }
+    const h = await hashPin("admin", pass);
+    if (!saved) { store.set("ga.admin", h); admin.open = true; toast("Admin passcode set. Keep it somewhere safe."); return render(); }
+    if (saved !== h) { admin.err = "That passcode doesn't match."; return render(); }
+    admin.open = true; admin.err = ""; render();
+  }
+  function adminRows() {
+    const rows = [];
+    for (const p of Object.values(accounts)) {
+      if (p.demo) continue;
+      normalize(p);
+      rows.push({ id: "d:" + p.key, src: "device", key: p.key, name: p.name, xp: p.xp, coins: p.coins, grade: p.maxGrade, look: p.look, eq: p.eq, photo: p.photo, ...summary(p) });
+    }
+    if (remote.on) for (const r of remote.board) {
+      const mine = r.owner === remote.uid && rows.find((x) => x.src === "device" && x.key === r.key);
+      if (mine) { mine.shared = true; mine.owner = r.owner; mine.hidden = !!r.hidden; continue; }
+      const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      rows.push({ id: `r:${r.owner}:${r.key}`, src: "shared", key: r.key, owner: r.owner, shared: true, name: r.name, xp: n(r.xp), coins: n(r.coins),
+        grade: GRADES.includes(r.grade) ? r.grade : 6, startGrade: GRADES.includes(r.startGrade) ? r.startGrade : GRADES.includes(r.grade) ? r.grade : 6,
+        created: n(r.created) || null, seen: n(r.seen) || n(r.updated) || null, answered: n(r.answered), correct: n(r.correct), quizzes: n(r.quizzes), lessons: n(r.lessons),
+        mastered: n(r.mastered), owned: n(r.owned), streak: n(r.streak), days: r.days && typeof r.days === "object" ? r.days : {}, hidden: !!r.hidden, look: r.look, eq: r.eq });
+    }
+    return rows;
+  }
+  // Single-series bar chart: one hue, thin bars with rounded tops, a recessive baseline, a tooltip per bar.
+  function barChart(data, unit) {
+    const W = 560, H = 170, pad = { l: 8, r: 8, t: 22, b: 26 }, n = data.length, max = Math.max(1, ...data.map((d) => d.v));
+    const bw = (W - pad.l - pad.r) / n, inner = Math.max(4, Math.min(28, bw - 6)), y = (v) => pad.t + (H - pad.t - pad.b) * (1 - v / max);
+    const peak = data.reduce((m, d, i) => (d.v > data[m].v ? i : m), 0);
+    const bars = data.map((d, i) => {
+      const x = pad.l + i * bw + (bw - inner) / 2, top = y(d.v), h = H - pad.b - top, r = Math.min(4, inner / 2, h);
+      const path = h <= 0 ? "" : `M${x},${H - pad.b} V${top + r} Q${x},${top} ${x + r},${top} H${x + inner - r} Q${x + inner},${top} ${x + inner},${top + r} V${H - pad.b} Z`;
+      return `<g class="bar-g"><rect x="${pad.l + i * bw}" y="${pad.t}" width="${bw}" height="${H - pad.t - pad.b}" fill="transparent"><title>${esc(d.tip || d.l)}: ${d.v} ${unit}</title></rect>
+        ${path ? `<path d="${path}" class="bar-m"><title>${esc(d.tip || d.l)}: ${d.v} ${unit}</title></path>` : ""}
+        ${i === peak && d.v > 0 ? `<text x="${x + inner / 2}" y="${top - 6}" text-anchor="middle" class="bar-v">${d.v}</text>` : ""}
+        ${n <= 8 || i % 2 === (n - 1) % 2 ? `<text x="${x + inner / 2}" y="${H - 8}" text-anchor="middle" class="bar-l">${esc(d.l)}</text>` : ""}</g>`;
+    }).join("");
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(data.map((d) => `${d.tip || d.l} ${d.v}`).join(", "))}"><line x1="${pad.l}" x2="${W - pad.r}" y1="${H - pad.b}" y2="${H - pad.b}" class="bar-axis"/>${bars}</svg>`;
+  }
+  function lastDays(n) { return Array.from({ length: n }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (n - 1 - i)); return d; }); }
+  function vAdminGate() {
+    const has = !!store.get("ga.admin");
+    return `<section class="admin-gate card stack">
+      <span class="label">Owner dashboard</span>
+      <h2>${has ? "Enter the admin passcode" : "Set an admin passcode"}</h2>
+      <p class="muted small">${has ? "Only the owner should have this passcode." : "Pick a passcode of 6 or more characters. You'll need it each time you open the dashboard on this browser."} On the claude.ai link the owner gets in automatically.</p>
+      <form class="stack" data-form="admin" autocomplete="off"><label class="field"><span class="label">Passcode</span><input id="adPass" type="password" autocomplete="off"></label>
+      <p class="err">${esc(admin.err)}</p>
+      <div class="row"><button class="btn btn-primary" type="submit">${has ? "Open dashboard" : "Set passcode and open"}</button><button class="btn btn-ghost" type="button" data-act="adminClose">Back</button></div></form>
+    </section>`;
+  }
+  function vAdmin() {
+    if (!admin.open && remote.owner) admin.open = true;
+    if (!admin.open) return vAdminGate();
+    const rows = adminRows(), now = Date.now();
+    const tabs = [["overview", "Overview"], ["players", "Players"], ["rewards", "Rewards"], ["board", "Leaderboard"]];
+    const head = `<section class="admin-head"><div class="stack" style="gap:4px"><span class="label">Owner dashboard</span><h2>Gyaan Arena admin</h2>
+        <span class="small muted">${remote.on ? `${remote.owner ? "You own this link. " : ""}Showing players on this device and everyone on the shared leaderboard.` : "Showing players stored in this browser. Open the claude.ai link as the owner to see every player."}</span></div>
+        <div class="row"><button class="btn" data-act="adminClose">Exit dashboard</button></div></section>
+      <div class="seg admin-tabs" role="tablist">${tabs.map(([t, n]) => `<button role="tab" data-act="adminTab" data-t="${t}" aria-pressed="${admin.tab === t}">${n}</button>`).join("")}</div>`;
+    let body = "";
+    if (admin.tab === "overview") {
+      const wk = now - 7 * DAY, sum = (k) => rows.reduce((a, r) => a + (r[k] || 0), 0);
+      const acc = sum("answered") ? Math.round((sum("correct") / sum("answered")) * 100) : 0;
+      const tiles = [["Players", rows.length, `${rows.filter((r) => r.src === "device").length} on this device`], ["New this week", rows.filter((r) => r.created && r.created >= wk).length, "signed up in 7 days"],
+        ["Active this week", rows.filter((r) => r.seen && r.seen >= wk).length, "played in 7 days"], ["Questions answered", sum("answered"), `${acc}% correct`],
+        ["Lessons watched", sum("lessons"), "fix-it videos"], ["Coins held", sum("coins"), "across all players"]];
+      const days = lastDays(14), label = (d) => `${d.getDate()}/${d.getMonth() + 1}`;
+      const signups = days.map((d) => ({ l: label(d), tip: d.toDateString(), v: rows.filter((r) => r.created && dayStr(new Date(r.created)) === dayStr(d)).length }));
+      const answers = days.map((d) => ({ l: label(d), tip: d.toDateString(), v: rows.reduce((a, r) => a + (Number(r.days?.[dayStr(d)]) || 0), 0) }));
+      const funnel = [["Signed up", rows.length], ["Answered a question", rows.filter((r) => r.answered > 0).length], ["Finished a quiz", rows.filter((r) => r.quizzes > 0).length],
+        ["Watched a fix-it lesson", rows.filter((r) => r.lessons > 0).length], ["Mastered a chapter (2★)", rows.filter((r) => r.mastered > 0).length], ["Unlocked a new class", rows.filter((r) => r.grade > r.startGrade).length]];
+      const start = GRADES.map((g) => ({ l: g === 11 ? "Col" : "G" + g, tip: gname(g), v: rows.filter((r) => r.startGrade === g).length }));
+      body = `<section class="kpis">${tiles.map(([n, v, d]) => `<div class="card kpi"><span class="label">${n}</span><b class="num">${v.toLocaleString("en-IN")}</b><span class="small muted">${d}</span></div>`).join("")}</section>
+        <section class="grid2">
+          <div class="card stack"><h3>Sign-ups per day</h3><span class="small muted">Last 14 days</span>${barChart(signups, "sign-ups")}</div>
+          <div class="card stack"><h3>Questions answered per day</h3><span class="small muted">Last 14 days, all players</span>${barChart(answers, "answers")}</div>
+        </section>
+        <section class="grid2">
+          <div class="card stack"><h3>Onboarding funnel</h3><span class="small muted">How far new players get</span>
+            <div class="funnel">${funnel.map(([n, v]) => { const pc = rows.length ? Math.round((v / rows.length) * 100) : 0; return `<div class="fun-row"><span>${n}</span><span class="fun-bar"><i style="width:${pc}%"></i></span><b class="num">${v}</b><span class="small muted">${pc}%</span></div>`; }).join("")}</div></div>
+          <div class="card stack"><h3>Starting class</h3><span class="small muted">The class players picked at sign-up</span>${barChart(start, "players")}</div>
+        </section>
+        ${rows.length ? "" : `<p class="notice">No players yet. Stats appear here as soon as someone signs up.</p>`}`;
+    }
+    if (admin.tab === "players") {
+      const q = admin.q.toLowerCase();
+      const list = rows.filter((r) => !q || r.name.toLowerCase().includes(q)).sort((a, b) => (b.seen || 0) - (a.seen || 0));
+      body = `<section class="card stack"><div class="row" style="justify-content:space-between"><h3>Players <span class="muted small">${list.length}</span></h3>
+          <label class="field" style="min-width:220px"><input id="adSearch" placeholder="Search by name" value="${esc(admin.q)}" aria-label="Search players"></label></div>
+        <div class="table-wrap"><table class="admin-table"><thead><tr><th>Player</th><th>Class</th><th class="num">Level</th><th class="num">Coins</th><th class="num">Accuracy</th><th>Last active</th><th></th></tr></thead><tbody>
+        ${list.map((r) => {
+          const accR = r.answered ? Math.round((r.correct / r.answered) * 100) + "%" : "–";
+          const ed = admin.edit && admin.edit.id === r.id ? admin.edit : null;
+          const actions = `<button class="btn" data-act="adEdit" data-id="${esc(r.id)}" data-k="coins">Coins</button>
+            ${r.src === "device" ? `<button class="btn" data-act="adEdit" data-id="${esc(r.id)}" data-k="pin">Reset PIN</button>${r.grade < 11 ? `<button class="btn" data-act="adGrade" data-id="${esc(r.id)}">Unlock next class</button>` : ""}<button class="btn btn-ghost danger" data-act="adDel" data-id="${esc(r.id)}">${admin.confirm === r.id ? "Click again to delete" : "Delete"}</button>` : ""}
+            ${r.shared ? `<button class="btn btn-ghost" data-act="adHide" data-id="${esc(r.id)}">${r.hidden ? "Show on board" : "Hide from board"}</button>` : ""}`;
+          return `<tr><td><span class="row" style="gap:10px;flex-wrap:nowrap">${avatar(r, 34)}<span><b>${esc(r.name)}</b><br><span class="small muted">${r.src === "device" ? "This device" : "Shared link"}${r.hidden ? " · hidden" : ""}</span></span></span></td>
+            <td>${gname(r.grade)}</td><td class="num">${level(r.xp)}</td><td class="num">${r.coins}</td><td class="num">${accR}</td><td>${ago(r.seen)}</td><td><div class="row" style="gap:6px;justify-content:flex-end">${actions}</div></td></tr>
+            ${ed ? `<tr class="edit-row"><td colspan="7"><form class="row" data-form="adEdit" style="justify-content:flex-end">${ed.k === "coins"
+              ? `<label class="field" style="width:140px"><span class="label">Coins to add (− to remove)</span><input id="adAmt" type="number" step="1" value="50"></label><label class="field" style="flex:1;min-width:160px"><span class="label">Note (optional)</span><input id="adNote" maxlength="60" placeholder="e.g. Class quiz winner"></label>`
+              : `<label class="field" style="width:160px"><span class="label">New 4-digit PIN</span><input id="adPin" inputmode="numeric" maxlength="4"></label>`}
+              <button class="btn btn-primary" type="submit">${ed.k === "coins" ? (r.src === "device" ? "Give coins" : "Send coins") : "Save PIN"}</button><button class="btn btn-ghost" type="button" data-act="adCancel">Cancel</button></form>
+              ${ed.k === "coins" && r.src !== "device" ? `<p class="small muted" style="text-align:right">Coins reach this player the next time they open the app.</p>` : ""}</td></tr>` : ""}`;
+        }).join("") || `<tr><td colspan="7" class="muted">No players match.</td></tr>`}</tbody></table></div></section>`;
+    }
+    if (admin.tab === "rewards") {
+      const F = [["signup", "Welcome coins", "Given when a player signs up"], ["correct", "Coins per correct answer", "In every quiz"], ["streakBonus", "Streak bonus", "Extra coins per answer after 3 in a row"],
+        ["perfect", "Perfect round bonus", "When every answer in a quiz is right"], ["daily", "Daily challenge multiplier", "1 to 5 times the normal coins"], ["lesson", "Fix-it lesson reward", "For watching a lesson on a mistake"], ["gradeUp", "Class unlock bonus", "When a player unlocks the next class"]];
+      const log = store.get("ga.grantlog") || [];
+      body = `<section class="grid2">
+        <form class="card stack" data-form="adCfg"><h3>Reward amounts</h3><span class="small muted">${remote.owner ? "Saved for everyone who opens the shared link." : "Saved for this browser."} Existing coins are not changed.</span>
+          ${F.map(([k, n, d]) => `<label class="cfg-row"><span><b>${n}</b><br><span class="small muted">${d}</span></span><input type="number" min="0" max="${k === "daily" ? 5 : 1000}" step="1" id="cfg-${k}" value="${CFG[k]}"></label>`).join("")}
+          <div class="row"><button class="btn btn-primary" type="submit">Save rewards</button><button class="btn btn-ghost" type="button" data-act="adCfgReset">Back to defaults</button></div></form>
+        <div class="card stack"><h3>Coins given</h3><span class="small muted">Gifts and adjustments made from this dashboard</span>
+          ${log.length ? `<div class="table-wrap"><table><thead><tr><th>When</th><th>Player</th><th class="num">Coins</th><th>Note</th></tr></thead><tbody>${log.slice(0, 30).map((g) => `<tr><td>${ago(g.t)}</td><td>${esc(g.name)}</td><td class="num">${g.coins > 0 ? "+" : ""}${g.coins}</td><td>${esc(g.note || "")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="notice">No coins given yet. Use the Players tab to reward someone.</p>`}
+          <h3 style="margin-top:8px">Shop</h3><span class="small muted">${SHOP.length} accessories, ${rows.reduce((a, r) => a + (r.owned || 0), 0)} bought so far.</span></div>
+      </section>`;
+    }
+    if (admin.tab === "board") {
+      const ranked = rows.slice().sort((a, b) => b.xp - a.xp);
+      body = `<section class="card stack"><h3>Leaderboard</h3><span class="small muted">Hidden players don't appear on the public "Everyone" board. Their progress is untouched.</span>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Class</th><th class="num">XP</th><th class="num">Coins</th><th class="num">Streak</th><th></th></tr></thead><tbody>
+        ${ranked.map((r, i) => `<tr class="${r.hidden ? "dim" : ""}"><td class="rank ${i < 3 ? "medal-" + (i + 1) : ""}">${i + 1}</td><td><span class="row" style="gap:10px;flex-wrap:nowrap">${avatar(r, 32)}${esc(r.name)}</span></td><td>${gname(r.grade)}</td><td class="num">${r.xp}</td><td class="num">${r.coins}</td><td class="num">${r.streak || 0}</td>
+          <td>${r.shared ? `<button class="btn btn-ghost" data-act="adHide" data-id="${esc(r.id)}">${r.hidden ? "Show" : "Hide"}</button>` : `<span class="small muted">Device only</span>`}</td></tr>`).join("") || `<tr><td colspan="7" class="muted">No players yet.</td></tr>`}
+        </tbody></table></div></section>`;
+    }
+    return head + body + (remote.on ? "" : `<p class="small muted">This browser-only dashboard can't reach players on other devices. For one dashboard across every player, use the claude.ai link (owner sign-in) or connect a database.</p>`);
+  }
+  const findRow = (id) => adminRows().find((r) => r.id === id);
+  function logGrant(r, coins, note) { const log = store.get("ga.grantlog") || []; log.unshift({ t: Date.now(), name: r.name, coins, note }); store.set("ga.grantlog", log.slice(0, 200)); }
+  async function adminSubmitEdit() {
+    const ed = admin.edit, r = ed && findRow(ed.id); if (!r) return;
+    if (ed.k === "pin") {
+      const pin = ($("#adPin").value || "").trim(); if (!/^\d{4}$/.test(pin)) return toast("The PIN must be exactly 4 digits.");
+      accounts[r.key].pinHash = await hashPin(r.key, pin); store.set("ga.accounts", accounts); admin.edit = null; toast(`${r.name}'s PIN was reset.`); return render();
+    }
+    const coins = Math.round(Number($("#adAmt").value) || 0), note = ($("#adNote").value || "").trim().slice(0, 60);
+    if (!coins) return toast("Enter a number of coins.");
+    if (r.src === "device") {
+      const p = accounts[r.key]; p.coins = Math.max(0, p.coins + coins); store.set("ga.accounts", accounts);
+      if (me && me.key === r.key) me = p;
+      if (remote.db && remote.uid && r.shared) { const keep = me; me = p; pushRemote(); me = keep; }
+    } else {
+      if (!remote.db || !remote.owner) return toast("Only the owner can send coins to shared players.");
+      const gid = Date.now().toString(36) + R.int(100, 999), ref = remote.db.doc("grants/" + r.owner), item = { [gid]: { key: r.key, coins, note, t: Date.now() } };
+      try { await ref.update({ items: item }); } catch (e) { try { await ref.set({ items: item }); } catch (e2) { return toast("Couldn't send coins. Check your access to this link."); } }
+    }
+    logGrant(r, coins, note); admin.edit = null; toast(`${coins > 0 ? "Gave" : "Took"} ${Math.abs(coins)} coins ${coins > 0 ? "to" : "from"} ${r.name}.`); render();
+  }
+  async function adminHide(id) {
+    const r = findRow(id); if (!r || !r.shared || !remote.db) return;
+    try { await remote.db.doc("leaderboard/" + r.owner).update({ players: { [r.key]: { hidden: !r.hidden } } }); toast(r.hidden ? `${r.name} is back on the board.` : `${r.name} is hidden from the board.`); }
+    catch (e) { toast("Only the owner can change the shared leaderboard."); }
+  }
+  function adminSaveCfg(reset) {
+    CFG = reset ? { ...CFG_DEFAULT } : cleanCfg(Object.fromEntries(Object.keys(CFG_DEFAULT).map((k) => [k, $("#cfg-" + k)?.value])));
+    store.set("ga.config", CFG);
+    if (remote.db && remote.owner) remote.db.doc("config/rewards").set({ ...CFG }).catch(() => toast("Saved here, but couldn't share the new rewards."));
+    toast(reset ? "Rewards are back to the defaults." : "Rewards saved."); render();
   }
 
   // ---------- Events ----------
@@ -977,6 +1279,7 @@
     demo: () => { me = normalize(accounts.demo || demoPlayer()); ui.grade = me.maxGrade; save(); store.set("ga.session", "demo"); toast("You're the demo player. Create your own player to save real progress."); go("home"); },
     logout: () => { me = null; store.set("ga.session", null); ui.loginTab = Object.keys(accounts).length ? "in" : "new"; go("login"); },
     subj: (d) => { ui.subject = d.id; render(); },
+    subjGo: (d) => { ui.subject = d.id; ui.grade = me.maxGrade; go("learn"); },
     grade: (d) => { ui.grade = Number(d.g); render(); },
     progGrade: (d) => { ui.progGrade = Number(d.g); render(); },
     practise: (d) => { if (SKILL[d.sid].g > me.maxGrade) return toast("That grade is still locked."); startQuiz(d.sid); },
@@ -1015,10 +1318,31 @@
     lSeek: (d) => seekScene(Number(d.i)),
     lVoice: () => { lesson.voice = !lesson.voice; if (lesson.voice && lesson.playing) speak(sceneSpeech(lesson.scenes[lesson.i])); else hush(); render(); },
     askWhy: () => askWhy(),
+    admin: () => openAdmin(),
+    adminClose: () => { const f = admin.from; go(me ? (f && f !== "admin" && f !== "login" ? f : "home") : "login"); },
+    adminTab: (d) => { admin.tab = d.t; admin.edit = null; admin.confirm = null; render(); },
+    adEdit: (d) => { admin.edit = { id: d.id, k: d.k }; admin.confirm = null; render(); const i = $(d.k === "pin" ? "#adPin" : "#adAmt"); if (i) i.focus(); },
+    adCancel: () => { admin.edit = null; render(); },
+    adGrade: (d) => { const r = findRow(d.id), p = r && accounts[r.key]; if (!p || p.maxGrade >= 11) return; p.maxGrade = GRADES[GRADES.indexOf(p.maxGrade) + 1]; store.set("ga.accounts", accounts); if (me && me.key === p.key) me = p; toast(`${p.name} can now practise ${gname(p.maxGrade)}.`); render(); },
+    adDel: (d) => {
+      if (admin.confirm !== d.id) { admin.confirm = d.id; return render(); }
+      const r = findRow(d.id); if (!r) return;
+      delete accounts[r.key]; store.set("ga.accounts", accounts); admin.confirm = null;
+      if (me && me.key === r.key) { me = null; store.set("ga.session", null); }
+      toast(`${r.name} was removed from this device.`); render();
+    },
+    adHide: (d) => adminHide(d.id),
+    adCfgReset: () => adminSaveCfg(true),
     rmPhoto: () => { delete me.photo; save(); toast("Back to your cartoon face."); render(); },
   };
   document.addEventListener("change", (e) => {
+    if (e.target.id === "voiceSel") { store.set("ga.voice", e.target.value); if (lesson && lesson.playing) speak(sceneSpeech(lesson.scenes[lesson.i])); return; }
     if (e.target.id === "photoIn" || e.target.id === "suPhotoIn") { processPhoto(e.target.files && e.target.files[0], e.target.id === "suPhotoIn"); e.target.value = ""; }
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.id !== "adSearch") return;
+    admin.q = e.target.value; const pos = e.target.selectionStart; render();
+    const i = $("#adSearch"); if (i) { i.focus(); i.setSelectionRange(pos, pos); }
   });
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-act]");
@@ -1029,7 +1353,8 @@
   document.addEventListener("submit", (e) => {
     const f = e.target.closest("[data-form]"); if (!f) return;
     e.preventDefault();
-    (f.dataset.form === "signup" ? doSignup : doSignin)();
+    const F = { signup: doSignup, signin: doSignin, admin: adminUnlock, adEdit: adminSubmitEdit, adCfg: () => adminSaveCfg(false) };
+    (F[f.dataset.form] || (() => {}))();
   });
   document.addEventListener("keydown", (e) => {
     if (e.target.matches("input, select, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1054,7 +1379,10 @@
 
   // ---------- Boot ----------
   const sess = store.get("ga.session");
-  if (sess && accounts[sess]) { me = normalize(accounts[sess]); ui.grade = me.maxGrade; view = "home"; }
+  // Upgrade every saved player on this device to the new chapter list (nothing is removed).
+  Object.values(accounts).forEach(normalize); store.set("ga.accounts", accounts);
+  if (sess && accounts[sess]) { me = accounts[sess]; ui.grade = me.maxGrade; view = "home"; }
+  if (/[#&]admin\b/.test(location.hash)) { admin.from = view; view = "admin"; }
   else if (Object.keys(accounts).length) ui.loginTab = "in";
   render();
   initRemote();
